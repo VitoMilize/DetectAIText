@@ -42,7 +42,6 @@ class My_Classifier_Model:
 
         self.logger = logger
 
-    @staticmethod
     def inference_tfidf(self, path_to_dataset):
         logger = self.logger
 
@@ -282,7 +281,7 @@ if __name__ == '__main__':
                 model.logger.error("Command is required.")
         elif args.pipeline == 'tfidf':
             if args.command == 'predict':
-                model.inference_tfidf(model, args.dataset)
+                model.inference_tfidf(args.dataset)
             else:
                 model.logger.error("Command is required.")
         else:
