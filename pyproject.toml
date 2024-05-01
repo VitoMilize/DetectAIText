@@ -16,6 +16,7 @@ lightgbm = "^4.3.0"
 torch = "^2.2.2"
 transformers = "^4.39.3"
 wandb = "^0.16.6"
+flask = "^3.0.3"
 
 [build-system]
 requires = ["poetry-core"]

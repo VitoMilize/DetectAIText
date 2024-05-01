@@ -1,33 +1,31 @@
 import argparse
 import logging
 import os
-
+import onnxruntime
+import torch
 import numpy as np
 import pandas as pd
-import torch
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import MultinomialNB
+from tqdm.auto import tqdm
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 from tokenizers import (
     models,
     normalizers,
     pre_tokenizers,
     trainers,
-    Tokenizer,
+    Tokenizer
 )
-from tqdm.auto import tqdm
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from transformers import PreTrainedTokenizerFast
 
 DATA_PATH = 'data'
 PREDICTIONS_PATH = 'data/results.csv'
 LOGS_PATH = 'data/log_file.log'
-MODEL_PATH = '../../Desktop/model'
-TOKENIZER_PATH = 'tokenizer'
-TFIDF_TRAIN_DATASET_PATH = '../../Desktop/datasets/tfidf_train_essays.csv'
-LLM_TRAIN_DATASET_PATH = '../../Desktop/datasets/llm_train_essays.pkl'
+MODEL_PATH = 'model/deberta-v3-base-finetuned.onnx'
+TOKENIZER_PATH = 'model/deberta-v3-base-finetuned'
+TFIDF_TRAIN_DATASET_PATH = 'datasets/tfidf_train_essays.csv'
 
 
 class My_Classifier_Model:
@@ -51,7 +49,8 @@ class My_Classifier_Model:
             test_df = pd.read_csv(path_to_dataset)
 
             logger.info('Dataset has been read.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Dataset not found.')
             return
 
@@ -80,7 +79,8 @@ class My_Classifier_Model:
             )
 
             logger.info('Tokenizer has been created.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Tokenizer not created.')
             return
 
@@ -96,7 +96,8 @@ class My_Classifier_Model:
                 tokenized_texts_train.append(tokenizer.tokenize(text))
 
             logger.info('Texts have been tokenized.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Texts not tokenized.')
             return
 
@@ -136,7 +137,8 @@ class My_Classifier_Model:
             y_train = train_df['generated']
 
             logger.info('Tokens have been transformed to TF-IDF.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Tokens not transformed to TF-IDF.')
             return
 
@@ -163,7 +165,8 @@ class My_Classifier_Model:
             )
 
             logger.info('Classifier has been created.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Classifier not created.')
             return
 
@@ -173,7 +176,8 @@ class My_Classifier_Model:
             ensemble.fit(tf_train, y_train)
 
             logger.info('Classifier has been trained.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Classifier not trained.')
             return
 
@@ -183,7 +187,8 @@ class My_Classifier_Model:
             predictions = ensemble.predict_proba(tf_test)[:, 1]
 
             logger.info('Predictions have been created.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Predictions not created.')
             return
 
@@ -193,7 +198,8 @@ class My_Classifier_Model:
             pd.DataFrame({'id': test_df['id'], 'generated': predictions}).to_csv(PREDICTIONS_PATH, index=False)
 
             logger.info('Predictions have been saved.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Predictions not saved.')
             return
 
@@ -205,12 +211,12 @@ class My_Classifier_Model:
         try:
             logger.info('Creating model...')
 
-            tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-            model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH,
-                                                                       max_position_embeddings=MAX_LEN)
+            tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH)
+            model = onnxruntime.InferenceSession(MODEL_PATH)
 
             logger.info('Model has been created.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Model not found.')
             return
 
@@ -220,7 +226,8 @@ class My_Classifier_Model:
             test_df = pd.read_csv(path_to_dataset)
 
             logger.info('Dataset has been read.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Dataset not found.')
             return
 
@@ -239,24 +246,26 @@ class My_Classifier_Model:
                         max_length=MAX_LEN,
                         return_tensors='pt',
                     )
-                    logits = model(**inputs).logits.numpy()
+                    logits = model.run(None, {'input_ids': inputs['input_ids'].numpy(), 'attention_mask': inputs['attention_mask'].numpy()})[0]
                     y_pred.extend((np.exp(logits) / np.sum(np.exp(logits), axis=-1, keepdims=True))[:, 1])
 
             del tokenizer
             del model
 
             logger.info('Predictions have been created.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Predictions not created.')
             return
 
         try:
             logger.info('Saving predictions...')
 
-            pd.DataFrame({'id': test_df['id'], 'generated': y_pred}).to_csv('submission.csv', index=False)
+            pd.DataFrame({'id': test_df['id'], 'generated': y_pred}).to_csv(PREDICTIONS_PATH, index=False)
 
             logger.info('Predictions have been saved.')
-        except:
+        except Exception as e:
+            print(e)
             logger.error('Predictions not saved.')
             return
 
