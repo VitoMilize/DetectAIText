@@ -36,4 +36,4 @@ if __name__ == '__main__':
 
     model = My_Classifier_Model()
 
-    app.run()
+    app.run(host='0.0.0.0')
