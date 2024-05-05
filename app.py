@@ -11,6 +11,9 @@ DATA_PATH = 'data'
 
 @app.route('/llm_predict', methods=['POST'])
 def llm_predict():
+    """
+        Функция обертка для получения предсказаний по указанному датасету в теле запроса с помощью LLM
+    """
     try:
         data = request.get_json()
         dataset_path = data['dataset_path']
@@ -22,6 +25,9 @@ def llm_predict():
 
 @app.route('/tfidf_predict', methods=['POST'])
 def tfidf_predict():
+    """
+        Функция обертка для получения предсказаний по указанному датасету в теле запроса с помощью TF-IDF
+    """
     try:
         data = request.get_json()
         dataset_path = data['dataset_path']

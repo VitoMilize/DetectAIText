@@ -30,7 +30,9 @@ TFIDF_TRAIN_DATASET_PATH = 'datasets/tfidf_train_essays.csv'
 
 class My_Classifier_Model:
     def __init__(self):
-
+        """
+            Инициализация модели.
+        """
         logger = logging.getLogger(__name__)
         file_handler = logging.FileHandler(LOGS_PATH)
         formatter = logging.Formatter('%(asctime)s:%(levelname)s: %(message)s')
@@ -41,6 +43,14 @@ class My_Classifier_Model:
         self.logger = logger
 
     def inference_tfidf(self, path_to_dataset):
+        """
+            Получение предсказаний по указанному датасету.
+
+            Parameters
+            ----------
+            path_to_dataset : string
+                Путь до датасета
+        """
         logger = self.logger
 
         try:
@@ -204,6 +214,14 @@ class My_Classifier_Model:
             return
 
     def inference_llm(self, path_to_dataset):
+        """
+            Получение предсказаний по указанному датасету.
+
+            Parameters
+            ----------
+            path_to_dataset : string
+            Путь до датасета
+        """
         MAX_LEN = 1024
         BATCH_SIZE = 16
         logger = self.logger
